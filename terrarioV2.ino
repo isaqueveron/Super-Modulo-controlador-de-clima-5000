@@ -37,16 +37,16 @@ void loop(){
   }
   // luminosidade
   luminosidade = analogRead(ldr);//Lê o valor do sensor ldr e armazena na variável valorldr
-  Serial.print("Valor lido pelo LDR = ");//Imprime na serial a mensagem Valor lido pelo LDR
-  Serial.println(luminosidade);//Imprime na serial os dados de valorldr
-
+  
   Serial.print("Umidade: "); //printa a umidade
   Serial.print(umidade);
   Serial.println("%");
   Serial.print(" / Temperatura: "); //IMPRIME O TEXTO NA SERIAL
   Serial.print(temperatura, 0); //IMPRIME NA SERIAL O VALOR DE temperatura
   Serial.println("*C"); //IMPRIME O TEXTO NA SERIAL
-
+  Serial.print("Luminosidade = ");//Imprime na serial a mensagem Valor lido pelo LDR
+  Serial.println(luminosidade);//Imprime na serial os dados de luminosidade
+  
   Serial.println("Dados enviados");
   bluetooth.print(umidade);
   bluetooth.print(temperatura);
