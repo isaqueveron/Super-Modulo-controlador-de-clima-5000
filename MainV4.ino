@@ -98,7 +98,7 @@ umidadeArAlvo=80;
 Ua=10;
 }
 
-Serial.println(leituraSerial);
+//Serial.println(leituraSerial);
 
 
   
