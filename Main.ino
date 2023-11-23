@@ -30,11 +30,11 @@ int AlertaUmiArBaixa=7;
 //alerta de umidade do ar alta
 int AlertaUmiArAlta=9;
 
-int seg = 3000;
+int seg = 1000;
 
 //Lumi vars
-float luminosidadeMedida = 0;//Declara a variável como inteiro
-float luminosidadeAlvo=20; //cria uma var e define a luminosidade alvo
+float luminosidadeMedida;//Declara a variável como inteiro
+float luminosidadeAlvo; //cria uma var e define a luminosidade alvo
 
 //Temperature vars
 float TemperaturaAlvo; //cria uma var e define a temperatura alvo como 20 graus
@@ -85,17 +85,19 @@ void loop()
 {
 
 int leituraSerial = Serial.read();
-if (leituraSerial==49)//MODO QUENTE E SECO
+if (leituraSerial==49)//SET MODE: QUENTE, AR SECO, SOLO SECO, ESCURO
 {
-TemperaturaAlvo=30;
-umidadeArAlvo=50;
-Ua=95;
+TemperaturaAlvo=100;   //100 C
+umidadeArAlvo=0;       //0% ar umido
+Ua=100;                //100% solo seco
+luminosidadeAlvo=100;  //100% escuro
 }
-else if (leituraSerial==50)//MODO FRIO E UMIDO
+else if (leituraSerial==50)//SET MODE: FRIO, AR UMIDO, SOLO UMIDO, CLARO
 {
-TemperaturaAlvo=20;
-umidadeArAlvo=80;
-Ua=10;
+TemperaturaAlvo=0;    //0 C
+umidadeArAlvo=100;    //100% ar umido
+Ua=0;                 //0% solo seco
+luminosidadeAlvo=0;   //0% ESCURO
 }
 
 //Serial.println(leituraSerial);
