@@ -2,7 +2,7 @@
 #include <DHT.h> //Biblioteca DHT
 #include <SoftwareSerial.h> //Biblioteca bt
 
-SoftwareSerial bluetooth(17,16); //objeto do bluetooth e entradas digitais
+SoftwareSerial bluetooth(17,16); //objeto do bluetooth e entradas digitais (rx,tx)
 
 #define HT A0 //define a porta que vai medir o ar
 #define TipoDHT DHT11 // define o tipo de sensor
@@ -37,18 +37,18 @@ float luminosidadeMedida = 0;//Declara a variável como inteiro
 float luminosidadeAlvo=20; //cria uma var e define a luminosidade alvo
 
 //Temperature vars
-float TemperaturaAlvo=20; //cria uma var e define a temperatura alvo como 20 graus
+float TemperaturaAlvo; //cria uma var e define a temperatura alvo como 20 graus
 float TemperaturaMedida; //cria uma var para guardar o valor de temperatura medido
 float dT;
+int potencia;
 
 //Umidade solovars
-float Ua=60; //cria uma var e define a umidade alvo como 60 %
+float Ua; //cria uma var e define a umidade alvo como 60 %
 float Um; //cria uma var para guardar o valor de umidade medido
 
 //Umidade Ar vars
-float umidadeArAlvo=65;
+float umidadeArAlvo;
 float umidadeArMedida;
-
 
 
 void setup() 
@@ -84,6 +84,25 @@ void setup()
 void loop() 
 {
 
+int leituraSerial = Serial.read();
+if (leituraSerial==49)//MODO QUENTE E SECO
+{
+TemperaturaAlvo=30;
+umidadeArAlvo=50;
+Ua=95;
+}
+else if (leituraSerial==50)//MODO FRIO E UMIDO
+{
+TemperaturaAlvo=20;
+umidadeArAlvo=80;
+Ua=10;
+}
+
+Serial.println(leituraSerial);
+
+
+  
+
 ////////////////////////////////////////////////////////////////////////////
 //TEMPERATURA---------------------------------------------------------------
 
@@ -94,12 +113,14 @@ dT = TemperaturaMedida-TemperaturaAlvo;
 
 if(dT>0)
 {
-  analogWrite(AlertaTempAlta, 150);
+  potencia = (dT*250/10);
+  analogWrite(AlertaTempAlta, potencia);
   analogWrite(AlertaTempBaixa, 0);
 }
 else
 {
-  analogWrite(AlertaTempBaixa, 150);
+  potencia = (-1*dT*250/10);
+  analogWrite(AlertaTempBaixa, potencia);
   analogWrite(AlertaTempAlta, 0);
 }
 
@@ -131,7 +152,7 @@ delay(seg);// Aguarda seg segundos
 
 //pegando o valor de out do sensor e transformando em umidade por cento
 Um = analogRead(SensorUmidPino);
-Um = ((Um*100)/1023);
+Um = ((Um*99)/1023);
 if(Um>Ua){
 digitalWrite(AlertaUmidBaixa, HIGH);}
 else{(AlertaUmidBaixa, LOW);}
@@ -158,7 +179,7 @@ else //temperatura eh menor que o desejada
 //LUMINOSIDADE--------------------------------------------------------------
 
 luminosidadeMedida = analogRead(SensorLumiPino);
-luminosidadeMedida=((luminosidadeMedida*100)/1023);
+luminosidadeMedida=((luminosidadeMedida*99)/1023);
 
 if(luminosidadeMedida>luminosidadeAlvo){analogWrite(AlertaLumiBaixa,150);}
 else{analogWrite(AlertaLumiBaixa,0);}
@@ -176,16 +197,18 @@ else{LCD.print("DARK");}
 //UMIDADE_AR----------------------------------------------------------------
 
 umidadeArMedida = dht.readHumidity(); //variavel que mede a umidade
-
-if(umidadeArMedida>umidadeArAlvo)
+int dUA=umidadeArMedida-umidadeArAlvo;
+if(dUA>0)
 {
-  analogWrite(AlertaUmiArAlta,150);
+  potencia = (dUA*250/100);
+  analogWrite(AlertaUmiArAlta,potencia);
   analogWrite(AlertaUmiArBaixa,0);
 }
 else
 {
+  potencia = (-1*dUA*250/100);
   analogWrite(AlertaUmiArAlta,0);
-  analogWrite(AlertaUmiArBaixa,150);
+  analogWrite(AlertaUmiArBaixa,potencia);
 }
 ////////////////////////////////////////////////////////////////////////////
 //UMI-AR-LCD----------------------------------------------------------------
@@ -247,21 +270,27 @@ LCD.print("%");
 ////////////////////////////////////////////////////////////////////////////
 delay(seg);// Aguarda seg segundos
 
-Serial.print("Umi Solo: ");
-Serial.println(Um);
-Serial.print("Umidade Ar:"); //printa a umidade
-Serial.print(umidadeArMedida);
-Serial.println("%");
 Serial.print("Temperatura:"); //IMPRIME O TEXTO NA SERIAL
 Serial.println(TemperaturaMedida); //IMPRIME NA SERIAL O VALOR DE temperatura
+
+//Serial.print("Umi Solo:");
+//Serial.println(Um);
+
+Serial.print("Umidade Ar:"); //printa a umidade
+Serial.println(umidadeArMedida);
+
+//Serial.println("%");
+
 Serial.print("Luminosidade:");//Imprime na serial a mensagem Valor lido pelo LDR
 Serial.println(luminosidadeMedida);//Imprime na serial os dados de luminosidade
   
-  Serial.println("Enviando dados");
-  bluetooth.print(umidadeArMedida);
+  //Serial.println("Enviando dados");
   bluetooth.print(TemperaturaMedida);
+  bluetooth.print("/");
+  bluetooth.print(umidadeArMedida);
+  bluetooth.print("/");
   bluetooth.print(luminosidadeMedida);
-  Serial.println("Dados enviados");
+  //Serial.println("Dados enviados");
 
   delay(seg); //delay de 3 segundos
 
