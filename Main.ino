@@ -2,7 +2,8 @@
 #include <DHT.h> //Biblioteca DHT
 #include <SoftwareSerial.h> //Biblioteca bt
 
-SoftwareSerial bluetooth(17,16); //objeto do bluetooth e entradas digitais (rx,tx)
+SoftwareSerial Bluetooth(10,11); //ROXO,PRETO objeto do bluetooth e entradas digitais (rx,tx)
+char code;
 
 #define HT A0 //define a porta que vai medir o ar
 #define TipoDHT DHT11 // define o tipo de sensor
@@ -19,7 +20,6 @@ int SensorLumiPino = A1;
 int SensorUmidPino=A3;
 
 
-
 //lampada
 int Pos_Bomba=5;
 int Neg_Bomba=6;
@@ -29,7 +29,7 @@ int Pos_Peltier=4;
 //pino pwm -peltier
 int Neg_Peltier=3;
 
-int seg = 500;
+int seg = 0;
 
 //Lumi vars
 float luminosidadeMedida;//Declara a variável como inteiro
@@ -53,7 +53,12 @@ float umidadeArMedida;
 void setup() 
 {
   Serial.begin(9600);
-  bluetooth.begin(9600); //inicia a conexao bt
+  while (!Serial) {
+    ; // wait for serial port to connect. Needed for Native USB only
+  }
+  Bluetooth.begin(9600); //inicia a conexao bt
+  Bluetooth.println("Hello, world?");
+  Serial.println(Bluetooth.read());
   dht.begin(); //inicia o sensor
   //------------------------------------------------------------------
   
@@ -77,24 +82,17 @@ void setup()
 
 void loop() 
 {
-
-int leituraSerial = Serial.read();
-if (leituraSerial==49)
-{
-TemperaturaAlvo=23;
-}
-else if (leituraSerial==50)
-{
-TemperaturaAlvo=26;
-}
-else if (leituraSerial==51)
-{
-TemperaturaAlvo=30;
-}
-else if (leituraSerial==52)
-{
-TemperaturaAlvo=33;
-}
+code = Bluetooth.read();
+Serial.println(code, DEC);
+Serial.println();
+if (code==97)//verao
+{TemperaturaAlvo=33;}
+if (code==98)//outono
+{TemperaturaAlvo=26;}
+if (code==99)//inverno
+{TemperaturaAlvo=23;}
+if (code==100)//primavera
+{TemperaturaAlvo=29;}
 
 
 ////////////////////////////////////////////////////////////////////////////
@@ -104,40 +102,40 @@ TemperaturaMedida = dht.readTemperature(); //variavel que mede a temperatura
     
 //definindo a diferenca entre a temperatura desejada e a medida para tomar decisoes
 dT = TemperaturaMedida-TemperaturaAlvo;
-Serial.print(">>>>");
-Serial.println(dT);
+//Serial.print(">>>>");
+//Serial.println(dT);
 if((dT<1)&&(dT>0.3)) //se pouco quente
 {
   potencia = (dT*255);
   ligar_peltier(Pos_Peltier,Neg_Peltier,0,potencia);
-  Serial.println("pouco quente");
-  Serial.println(potencia);
+  //Serial.println("pouco quente");
+  //Serial.println(potencia);
 }
 else if((dT>-1)&&(dT<-0.3)) //se pouco frio
 {
   potencia = (-1*dT*255);
   ligar_peltier(Pos_Peltier,Neg_Peltier,potencia,0);
-  Serial.println("pouco frio");
-  Serial.println(potencia);
+  //Serial.println("pouco frio");
+  //Serial.println(potencia);
 }
 else if(1<dT)//se  quente
 {
   potencia = 255;
   ligar_peltier(Pos_Peltier,Neg_Peltier,0,255);
-  Serial.println("quente");
-  Serial.println(potencia);
+  //Serial.println("quente");
+  //Serial.println(potencia);
 }
 else if(dT<-1)//se frio
 {
   potencia = 255;
   ligar_peltier(Pos_Peltier,Neg_Peltier,255,0); 
-  Serial.println("frio") ;
-  Serial.println(potencia);
+  //Serial.println("frio") ;
+  //Serial.println(potencia);
 }
 else if ((dT>-0.4)&&(dT<0.4))
 {
   ligar_peltier(Pos_Peltier,Neg_Peltier,0,0); 
-  Serial.println("Temperatura OK") ;
+  //Serial.println("Temperatura OK") ;
 }
 
 
@@ -286,39 +284,28 @@ else{LCD.print("ON ");}
 
 
 ////////////////////////////////////////////////////////////////////////////
-delay(seg);// Aguarda seg segundos
 
-/////////////
-//Serial.print(TemperaturaAlvo);
-//Serial.print(", ");
-//Serial.print(umidadeArAlvo);
-//Serial.print(", ");
-//Serial.println(luminosidadeAlvo);
-////////////
-
-Serial.print("Temperatura:"); //IMPRIME O TEXTO NA SERIAL
-Serial.println(TemperaturaMedida); //IMPRIME NA SERIAL O VALOR DE temperatura
+//Serial.print("Temperatura:"); //IMPRIME O TEXTO NA SERIAL
+//Serial.println(TemperaturaMedida); //IMPRIME NA SERIAL O VALOR DE temperatura
 
 //Serial.print("Umi Solo:");
 //Serial.println(Um);
 
-Serial.print("Umidade Ar:"); //printa a umidade
-Serial.println(umidadeArMedida);
+//Serial.print("Umidade Ar:"); //printa a umidade
+//Serial.println(umidadeArMedida);
 
-//Serial.println("%");
-
-Serial.print("Luminosidade:");//Imprime na serial a mensagem Valor lido pelo LDR
-Serial.println(luminosidadeMedida);//Imprime na serial os dados de luminosidade
+//Serial.print("Luminosidade:");//Imprime na serial a mensagem Valor lido pelo LDR
+//Serial.println(luminosidadeMedida);//Imprime na serial os dados de luminosidade
   
-  //Serial.println("Enviando dados");
-  bluetooth.print(TemperaturaMedida);
-  bluetooth.print("/");
-  bluetooth.print(umidadeArMedida);
-  bluetooth.print("/");
-  bluetooth.print(luminosidadeMedida);
-  //Serial.println("Dados enviados");
-
-  delay(seg); //delay de 3 segundos
+//Serial.println("Enviando dados");
+Bluetooth.print(TemperaturaMedida);
+Bluetooth.print("/");
+Bluetooth.print(umidadeArMedida);
+Bluetooth.print("/");
+Bluetooth.print(luminosidadeMedida);
+//Serial.println("Dados enviados");
+   
+delay(seg); //delay de seg/1000 segundos
 
 }
 

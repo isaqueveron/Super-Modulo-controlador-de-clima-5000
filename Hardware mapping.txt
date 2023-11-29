@@ -6,18 +6,21 @@ Alerta Ar Umido = 9
 Alerta Ar Seco = 7
 
 Direita para a esquerda LCD
-42,44,46,48,50,52
+52,50,48,46,44,42
 
-Bt(16,17)
+Bt(10,11)
 
 
 Ponte H
-OUT1=3
-OUT2=4
-OUT3=5
-OUT4=6
+OUT1=5
+OUT2=6
+OUT3=3
+OUT4=4
 
 Sensores
 Umidade solo = A3
 Luminosidade = A1
 Temperatura = A0
+
+dentro e pos
+fora e gnd
