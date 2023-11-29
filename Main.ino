@@ -11,53 +11,42 @@ SoftwareSerial bluetooth(17,16); //objeto do bluetooth e entradas digitais (rx,t
 DHT dht(HT, TipoDHT); //objeto do sensor
 
 // Inicializa a biblioteca LCD
-LiquidCrystal LCD(42,44,46,48,50,52); //objeto do LCD
+LiquidCrystal LCD(52,50,48,46,44,42); //objeto do LCD
 
 //entrada do Sensor de lumi
 int SensorLumiPino = A1;
 //entrada do Sensor de umidade
 int SensorUmidPino=A3;
-// alerta de temperatura baixa 'led azul'
-int AlertaTempAlta=13;
-//alerta de temperatura alta 'led vermelho'
-int AlertaTempBaixa=12;
-//alerta de umidade baixa 'led vermelho'
-int AlertaUmidBaixa=11;
-//alerta de luminosidade baixa
-int AlertaLumiBaixa=10;
-//alerta de umidade do ar baixa
-int AlertaUmiArBaixa=7;
-//alerta de umidade do ar alta
-int AlertaUmiArAlta=9;
+
 
 
 //lampada
-int Pos_Lamp=4;
-int Neg_Lamp=3;
+int Pos_Bomba=5;
+int Neg_Bomba=6;
 
 //pino pwm +peltier
-int Pos_Peltier=5;
+int Pos_Peltier=4;
 //pino pwm -peltier
-int Neg_Peltier=6;
+int Neg_Peltier=3;
 
-int seg = 1000;
+int seg = 500;
 
 //Lumi vars
 float luminosidadeMedida;//Declara a variável como inteiro
-float luminosidadeAlvo=20; //cria uma var e define a luminosidade alvo
+float luminosidadeAlvo=50; //cria uma var e define a luminosidade alvo
 
 //Temperature vars
-float TemperaturaAlvo; //cria uma var e define a temperatura alvo como 20 graus
+float TemperaturaAlvo=25; //cria uma var e define a temperatura alvo como 20 graus
 float TemperaturaMedida; //cria uma var para guardar o valor de temperatura medido
 float dT;
 int potencia;
 
 //Umidade solovars
-float Ua; //cria uma var e define a umidade alvo como 60 %
+float Ua=20; //cria uma var e define a umidade alvo como 20 %
 float Um; //cria uma var para guardar o valor de umidade medido
 
 //Umidade Ar vars
-float umidadeArAlvo;
+float umidadeArAlvo=65;
 float umidadeArMedida;
 
 
@@ -67,12 +56,7 @@ void setup()
   bluetooth.begin(9600); //inicia a conexao bt
   dht.begin(); //inicia o sensor
   //------------------------------------------------------------------
-  pinMode(AlertaTempBaixa, OUTPUT); // Define o pino de alerta de temperatura baixa como saida
-  pinMode(AlertaTempAlta, OUTPUT); // Define o pino de alerta de temperatura alta como saida
-  pinMode(AlertaUmidBaixa, OUTPUT); // Define o pino de alerta de temperatura baixa como saida
-  pinMode(AlertaLumiBaixa, OUTPUT); //Define o pino de alerta de luminosidade baixa como saida
-  pinMode(AlertaUmiArBaixa, OUTPUT); //Define o pino de alerta de umidade do ar baixa como saida
-  pinMode(AlertaUmiArAlta, OUTPUT); //Define o pino de alerta de umidade do ar alta como saida
+  
   pinMode(SensorUmidPino, INPUT);
 
   //-------------------------------------------------------------------
@@ -95,27 +79,21 @@ void loop()
 {
 
 int leituraSerial = Serial.read();
-if (leituraSerial==49)//SET MODE: QUENTE, AR SECO, SOLO SECO, ESCURO
+if (leituraSerial==49)
 {
-TemperaturaAlvo=100;   //100 C
-umidadeArAlvo=0;       //0% ar umido
-Ua=100;                //100% solo seco
+TemperaturaAlvo=23;
 }
-else if (leituraSerial==50)//SET MODE: FRIO, AR UMIDO, SOLO UMIDO, CLARO
+else if (leituraSerial==50)
 {
-TemperaturaAlvo=0;    //0 C
-umidadeArAlvo=100;    //100% ar umido
-Ua=0;                 //0% solo seco
+TemperaturaAlvo=26;
 }
-else if (leituraSerial==51)//SET MODE: FRIO, AR UMIDO, SOLO UMIDO, CLARO
+else if (leituraSerial==51)
 {
-TemperaturaAlvo=22;}
-else if (leituraSerial==52)//SET MODE: FRIO, AR UMIDO, SOLO UMIDO, CLARO
+TemperaturaAlvo=30;
+}
+else if (leituraSerial==52)
 {
-TemperaturaAlvo=23;}
-else if (leituraSerial==53)//SET MODE: FRIO, AR UMIDO, SOLO UMIDO, CLARO
-{
-TemperaturaAlvo=24;
+TemperaturaAlvo=33;
 }
 
 
@@ -128,44 +106,38 @@ TemperaturaMedida = dht.readTemperature(); //variavel que mede a temperatura
 dT = TemperaturaMedida-TemperaturaAlvo;
 Serial.print(">>>>");
 Serial.println(dT);
-if((dT<1)&&(dT>0)) //se pouco quente
+if((dT<1)&&(dT>0.3)) //se pouco quente
 {
   potencia = (dT*255);
-  analogWrite(AlertaTempAlta, potencia);
-  analogWrite(AlertaTempBaixa, 0);
   ligar_peltier(Pos_Peltier,Neg_Peltier,0,potencia);
   Serial.println("pouco quente");
+  Serial.println(potencia);
 }
-else if((dT>-1)&&(dT<0)) //se pouco frio
+else if((dT>-1)&&(dT<-0.3)) //se pouco frio
 {
   potencia = (-1*dT*255);
-  analogWrite(AlertaTempAlta, 0);
-  analogWrite(AlertaTempBaixa, potencia);
   ligar_peltier(Pos_Peltier,Neg_Peltier,potencia,0);
   Serial.println("pouco frio");
+  Serial.println(potencia);
 }
 else if(1<dT)//se  quente
 {
-  potencia = (dT*250/10);
-  analogWrite(AlertaTempAlta, potencia);
-  analogWrite(AlertaTempBaixa, 0);
+  potencia = 255;
   ligar_peltier(Pos_Peltier,Neg_Peltier,0,255);
   Serial.println("quente");
+  Serial.println(potencia);
 }
 else if(dT<-1)//se frio
 {
-  potencia = (-1*dT*250/10);
-  analogWrite(AlertaTempAlta, 0);
-  analogWrite(AlertaTempBaixa, potencia);
+  potencia = 255;
   ligar_peltier(Pos_Peltier,Neg_Peltier,255,0); 
   Serial.println("frio") ;
+  Serial.println(potencia);
 }
-else if (dT==0)
+else if ((dT>-0.4)&&(dT<0.4))
 {
-  analogWrite(AlertaTempAlta, 0);
-  analogWrite(AlertaTempBaixa, 0);
   ligar_peltier(Pos_Peltier,Neg_Peltier,0,0); 
-  Serial.println("BALA") ;
+  Serial.println("Temperatura OK") ;
 }
 
 
@@ -178,10 +150,15 @@ LCD.setCursor(0,2);
 LCD.print("TEMP:    ");
 
 //imprimindo o estado do sistema
-if (dT>0) //temperatura e maior que o dejejado
+if (dT>0.3) //temperatura e maior que o dejejado
   {
     LCD.setCursor(5,2);
     LCD.print("HOT   ");
+  }
+else if ((dT>-0.3)&&(dT<0.3)) //temperatura e maior que o dejejado
+  {
+    LCD.setCursor(5,2);
+    LCD.print("OK    ");
   }
 
 else //temperatura eh menor que o desejada
@@ -193,13 +170,19 @@ else //temperatura eh menor que o desejada
 delay(seg);// Aguarda seg segundos
 
 ////////////////////////////////////////////////////////////////////////////////////
-//UMIDADE_SOLO----------------------------------------------------------------------
+//UMIDADE_SOLO----------------------------------------------------------------------OK
 
 //pegando o valor de out do sensor e transformando em umidade por cento
 Um = analogRead(SensorUmidPino);
 Um = ((Um*99)/1023);
-if(Um<Ua){digitalWrite(AlertaUmidBaixa, LOW);}
-if(Um>Ua){digitalWrite(AlertaUmidBaixa, HIGH);}
+Um = (100-Um);
+
+digitalWrite(Neg_Bomba,LOW);//GND
+if(Um<Ua)
+{
+  digitalWrite(Pos_Bomba, HIGH);
+}
+else{digitalWrite(Pos_Bomba, LOW);}
 
 
 /////////////////////////////////////////////////////////////////////////////////////
@@ -208,7 +191,7 @@ if(Um>Ua){digitalWrite(AlertaUmidBaixa, HIGH);}
 LCD.setCursor(0,4);
 LCD.print("SOlO:    ");
 
-if (Um<Ua) //umidade e maior que o dejejado
+if (Um>Ua) //umidade e maior que o dejejado
   {
     LCD.setCursor(5,4);
     LCD.print("UMIDO");
@@ -225,17 +208,7 @@ else //temperatura eh menor que o desejada
 
 luminosidadeMedida = analogRead(SensorLumiPino);
 luminosidadeMedida=((luminosidadeMedida*99)/1023);
-analogWrite(Neg_Lamp,0);//GND
-if(luminosidadeMedida>luminosidadeAlvo)
-{
-  analogWrite(AlertaLumiBaixa,150);
-  analogWrite(Pos_Lamp,255);
-}
-else
-{
-  analogWrite(AlertaLumiBaixa,0);
-  analogWrite(Pos_Lamp,0);
-}
+
 
 ////////////////////////////////////////////////////////////////////////////
 //LUMINOSIDADE-LCD----------------------------------------------------------
@@ -251,18 +224,7 @@ else{LCD.print("DARK");}
 
 umidadeArMedida = dht.readHumidity(); //variavel que mede a umidade
 int dUA=umidadeArMedida-umidadeArAlvo;
-if(dUA>0)
-{
-  potencia = (dUA*250/100);
-  analogWrite(AlertaUmiArAlta,potencia);
-  analogWrite(AlertaUmiArBaixa,0);
-}
-else
-{
-  potencia = (-1*dUA*250/100);
-  analogWrite(AlertaUmiArAlta,0);
-  analogWrite(AlertaUmiArBaixa,potencia);
-}
+
 ////////////////////////////////////////////////////////////////////////////
 //UMI-AR-LCD----------------------------------------------------------------
 
@@ -300,8 +262,9 @@ LCD.setCursor(12,0);
 LCD.print(UaINT);
 LCD.print("%");
 LCD.setCursor(17,0);
-LCD.print(luminosidadeAlvoINT);
-LCD.print("%");
+if(luminosidadeAlvo>50){
+LCD.print("OFF");}
+else{LCD.print("ON ");}
 
 //
 
@@ -317,8 +280,10 @@ LCD.setCursor(12,1);
 LCD.print(UmINT);
 LCD.print("%");
 LCD.setCursor(17,1);
-LCD.print(luminosidadeMedidaINT);
-LCD.print("%");
+if(luminosidadeMedida>luminosidadeAlvo){
+LCD.print("OFF");}
+else{LCD.print("ON ");}
+
 
 ////////////////////////////////////////////////////////////////////////////
 delay(seg);// Aguarda seg segundos
