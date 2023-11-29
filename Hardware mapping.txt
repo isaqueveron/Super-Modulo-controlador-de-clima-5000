@@ -1,0 +1,23 @@
+Alerta Temperatura Alta = 13
+Alerta Temperatura Baixa = 12
+Alerta Solo Seco = 11
+Alerta Escuro = 10
+Alerta Ar Umido = 9
+Alerta Ar Seco = 7
+
+Direita para a esquerda LCD
+42,44,46,48,50,52
+
+Bt(16,17)
+
+
+Ponte H
+OUT1=3
+OUT2=4
+OUT3=5
+OUT4=6
+
+Sensores
+Umidade solo = A3
+Luminosidade = A1
+Temperatura = A0
